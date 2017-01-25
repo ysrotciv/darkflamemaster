@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.jsoup.Jsoup
 import org.nutz.ssdb4j.SSDBs
-import space.yangshuai.darkflamemaster.crawler.KuaidailiCrawler
+import space.yangshuai.darkflamemaster.crawler.{IP66Crawler, KuaidailiCrawler}
 import space.yangshuai.darkflamemaster.exception.DFMProxyExhaustedException
 
 /**
@@ -93,6 +93,7 @@ object ProxyManager {
     * @return the number of valid proxies in "proxy_live"
     */
   def checkAllProxies(): Int = {
+    logger.info("Begin to check existing proxies...")
     val list = ssdb.zscan(PROXY_LIVE, "", "", "", -1).datas
     val iterator = list.iterator()
     while (iterator.hasNext) {
@@ -147,14 +148,20 @@ object ProxyManager {
   }
 
   def getProxy: (String, Int) = {
-    if (currentProxy == null)
-      updateProxy()
+    if (currentProxy == null) {
+      try {
+        updateProxy()
+      } catch {
+        case _: DFMProxyExhaustedException =>
+          return null
+      }
+    }
     currentProxy
   }
 
   def main(args: Array[String]): Unit = {
     checkAllProxies()
-    KuaidailiCrawler.crawl()
+    IP66Crawler.crawl()
     ssdb.close()
   }
 

@@ -2,7 +2,7 @@ package space.yangshuai.darkflamemaster
 
 import com.typesafe.scalalogging.Logger
 import space.yangshuai.darkflamemaster.common.Utils
-import space.yangshuai.darkflamemaster.crawler.KuaidailiCrawler
+import space.yangshuai.darkflamemaster.crawler.{IP66Crawler, KuaidailiCrawler}
 import space.yangshuai.darkflamemaster.db.ProxyManager
 
 /**
@@ -15,12 +15,13 @@ object Scheduler {
     val logger = Logger("Scheduler")
 
     while (true) {
-      logger.info("Begin to check existing proxies...")
       val size = ProxyManager.checkAllProxies()
       logger.info(s"There are $size valid proxies.")
 
-      logger.info("Begin to crawl www.kuaidaili.com.")
+      logger.info("Begin to crawl www.kuaidaili.com...")
       KuaidailiCrawler.crawl()
+      logger.info("Begin to crawl www.66ip.cn...")
+      IP66Crawler.crawl()
 
       val seconds = 10 * 60
       logger.info(s"Next loop start at: ${Utils.futureTime(seconds)}")
