@@ -45,15 +45,16 @@ object ProxyManager {
   /**
     * Check if the proxy can access one of the websites in ${TEST_URLS}
     * @param proxy a string represents proxy for example "123.123.123.123:8080"
+    * @param ifNew if the proxy is new, opposite to the ones in "proxy_live"
     * @return checking result
     */
-  def checkProxy(proxy: String): Boolean = {
+  def checkProxy(proxy: String, ifNew: Boolean = true): Boolean = {
     if (ssdb.exists(proxy).asInt() > 0) {
       logger.info(s"$proxy already lose efficacy")
       return false
     }
 
-    if (ssdb.zexists(PROXY_LIVE, proxy).asInt() > 0) {
+    if (ifNew && ssdb.zexists(PROXY_LIVE, proxy).asInt() > 0) {
       logger.info(s"$proxy already exists in $PROXY_LIVE")
       return false
     }
@@ -96,7 +97,7 @@ object ProxyManager {
     val iterator = list.iterator()
     while (iterator.hasNext) {
       val proxy = new String(iterator.next())
-      checkProxy(proxy)
+      checkProxy(proxy, ifNew = false)
       iterator.next()
     }
     ssdb.zsize(PROXY_LIVE).asInt()
