@@ -4,3 +4,9 @@
 A proxy pool implemented by scala and ssdb.
 
 Project name comes from an interesting Animation.
+
+## Proxy sources:
+* http://www.kuaidaili.com/free/inha/
+* http://www.66ip.cn/index.html (TODO)
+* http://www.youdaili.net/ (TODO)
+* http://www.goubanjia.com/free/index.shtml (TODO)
