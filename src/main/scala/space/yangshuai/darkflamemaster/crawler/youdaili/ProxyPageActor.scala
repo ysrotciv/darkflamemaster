@@ -22,6 +22,7 @@ class ProxyPageActor extends Actor {
 
   override def receive: Receive = {
     case ProxyPageRequest(url, proxy, homePage) =>
+      logger.info(s"Begin to crawl $url...")
       try {
         val doc = Utils.commonRequest(url, proxy)
         if (homePage) {

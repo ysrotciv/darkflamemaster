@@ -12,6 +12,8 @@ class SchedulerActor extends Actor {
   private val HOME_PAGE = "http://www.youdaili.net/Daili/guonei/"
   private var scheduler: ActorRef = _
   private var pageCount: Int = -1
+  private var successCount: Int = 0
+  private var failureCount: Int = 0
 
   override def receive: Receive = {
     case Start =>
@@ -25,7 +27,7 @@ class SchedulerActor extends Actor {
       actor ! ProxyPageRequest(url, ProxyManager.getProxy, homePage = true)
     case HomePageActor.ConnectionError(url, proxy) =>
       if (proxy == null) {
-        scheduler ! "Failed during crawling home page."
+        scheduler ! result("Failed during crawling home page.")
       } else {
         val currentProxy = ProxyManager.getProxy
         if (currentProxy equals proxy) {
@@ -35,21 +37,22 @@ class SchedulerActor extends Actor {
         }
       }
     case HomePageActor.Failed =>
-      scheduler ! "Failed during crawling home page."
+      scheduler ! result("Failed during crawling home page.")
     case ProxyPageActor.PageNumberMessage(firstPageURL, pageNumber) =>
-      if (pageNumber < 2) scheduler ! "Failed during crawling first page."
+      if (pageNumber < 2) scheduler ! result("Failed during crawling first page.")
       pageCount = pageNumber - 1
       if (pageNumber >= 2) {
         for (i <- 2 to pageNumber) {
           val url = s"${firstPageURL.split(".html")(0)}_$i.html"
-          val actor = YouDaiLiCrawler.system.actorOf(ProxyPageActor.props, url)
+          val actor = YouDaiLiCrawler.system.actorOf(ProxyPageActor.props, url.split("\\/").last)
           actor ! ProxyPageRequest(url, ProxyManager.getProxy)
         }
       }
     case ProxyPageActor.ConnectionError(url, proxy, isHomePage) =>
       if (proxy == null) {
+        failureCount += 1
         if (pageCount != -1) pageCount -= 1
-        if (pageCount <= 0) scheduler ! "complete"
+        if (pageCount <= 0) scheduler ! result("complete")
       } else {
         val currentProxy = ProxyManager.getProxy
         if (currentProxy equals proxy) {
@@ -60,12 +63,16 @@ class SchedulerActor extends Actor {
       }
     case ProxyPageActor.Failed(url) =>
       logger.error(s"Failed during crawling $url.")
+      failureCount += 1
       pageCount -= 1
-      if (pageCount <= 0) scheduler ! "complete"
+      if (pageCount <= 0) scheduler ! result("complete")
     case ProxyPageActor.Success =>
+      successCount += 1
       pageCount -= 1
-      if (pageCount <= 0) scheduler ! "complete"
+      if (pageCount <= 0) scheduler ! result("complete")
   }
+  
+  def result(message: String): String = s"SUCCESS: $successCount, FAILURE: $failureCount, $message"
 
 }
 
@@ -75,4 +82,5 @@ object SchedulerActor {
   case class HomePageRequest(url: String, proxy: (String, Int))
   case class ProxyPageRequest(url: String, proxy: (String, Int), homePage: Boolean = false)
   case class URLMessage(url: String)
+  case class Result(success: Int, failure: Int, message: String)
 }

@@ -20,10 +20,10 @@ object YouDaiLiCrawler extends Crawler {
   override def start(): Unit = {
     logger.info("Begin to collect proxies on YouDaiLi...")
     val actor = system.actorOf(SchedulerActor.props, "SchedulerActor")
-    implicit val timeout = Timeout(10 minutes)
+    implicit val timeout = Timeout(30 minutes)
     val future = actor ? SchedulerActor.Start
     try {
-      val result = Await.result(future, 10 minutes).toString
+      val result = Await.result(future, 30 minutes).toString
       logger.info(result)
     } catch {
       case e: Exception =>
