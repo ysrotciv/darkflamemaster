@@ -2,6 +2,7 @@ package space.yangshuai.darkflamemaster.crawler.youdaili
 
 import akka.actor.{Actor, ActorRef, Props}
 import space.yangshuai.darkflamemaster.db.ProxyManager
+import space.yangshuai.darkflamemaster.common.Utils._
 
 /**
   * Created by rotciv on 2017/1/26.
@@ -12,8 +13,8 @@ class SchedulerActor extends Actor {
   private val HOME_PAGE = "http://www.youdaili.net/Daili/guonei/"
   private var scheduler: ActorRef = _
   private var pageCount: Int = -1
-  private var successCount: Int = 0
-  private var failureCount: Int = 0
+  implicit var successCount: Int = 0
+  implicit var failureCount: Int = 0
 
   override def receive: Receive = {
     case Start =>
@@ -27,7 +28,7 @@ class SchedulerActor extends Actor {
       actor ! ProxyPageRequest(url, ProxyManager.getProxy, homePage = true)
     case HomePageActor.ConnectionError(url, proxy) =>
       if (proxy == null) {
-        scheduler ! result("Failed during crawling home page.")
+        scheduler ! result("Failed during crawling home page.", successCount, failureCount)
       } else {
         val currentProxy = ProxyManager.getProxy
         if (currentProxy equals proxy) {
@@ -37,9 +38,9 @@ class SchedulerActor extends Actor {
         }
       }
     case HomePageActor.Failed =>
-      scheduler ! result("Failed during crawling home page.")
+      scheduler ! result("Failed during crawling home page.", successCount, failureCount)
     case ProxyPageActor.PageNumberMessage(firstPageURL, pageNumber) =>
-      if (pageNumber < 2) scheduler ! result("Failed during crawling first page.")
+      if (pageNumber < 2) scheduler ! result("Failed during crawling first page.", successCount, failureCount)
       pageCount = pageNumber - 1
       if (pageNumber >= 2) {
         for (i <- 2 to pageNumber) {
@@ -52,7 +53,7 @@ class SchedulerActor extends Actor {
       if (proxy == null) {
         failureCount += 1
         if (pageCount != -1) pageCount -= 1
-        if (pageCount <= 0) scheduler ! result("complete")
+        if (pageCount <= 0) scheduler ! result("complete", successCount, failureCount)
       } else {
         val currentProxy = ProxyManager.getProxy
         logger.info(s"Begin to crawl $url...")
@@ -66,14 +67,12 @@ class SchedulerActor extends Actor {
       logger.error(s"Failed during crawling $url.")
       failureCount += 1
       pageCount -= 1
-      if (pageCount <= 0) scheduler ! result("complete")
+      if (pageCount <= 0) scheduler ! result("complete", successCount, failureCount)
     case ProxyPageActor.Success =>
       successCount += 1
       pageCount -= 1
-      if (pageCount <= 0) scheduler ! result("complete")
+      if (pageCount <= 0) scheduler ! result("complete", successCount, failureCount)
   }
-  
-  def result(message: String): String = s"SUCCESS: $successCount, FAILURE: $failureCount, $message"
 
 }
 

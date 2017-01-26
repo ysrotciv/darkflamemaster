@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.Logger
 import org.jsoup.Jsoup
 import org.nutz.ssdb4j.SSDBs
 import space.yangshuai.darkflamemaster.common.Utils
-import space.yangshuai.darkflamemaster.crawler.youdaili.YouDaiLiCrawler
+import space.yangshuai.darkflamemaster.crawler.ip66.IP66Crawler
 import space.yangshuai.darkflamemaster.exception.DFMProxyExhaustedException
 
 /**
@@ -123,13 +123,16 @@ object ProxyManager {
     }).filter(_ != null)
   }
 
-  def updateProxy(): (String, Int) = {
+  def updateProxy(proxy: (String, Int) = null): (String, Int) = {
     if (proxyQueue.isEmpty) {
       proxyQueue ++= getProxies
     }
     if (proxyQueue.isEmpty) throw DFMProxyExhaustedException()
-    currentProxy = proxyQueue.dequeue()
-    logger.info(s"change proxy to $currentProxy")
+    while (true) {
+      if (proxyQueue.isEmpty) return null
+      currentProxy = proxyQueue.dequeue()
+      if (proxy == null || !proxy.equals(currentProxy)) return currentProxy
+    }
     currentProxy
   }
 
@@ -146,8 +149,8 @@ object ProxyManager {
   }
 
   def main(args: Array[String]): Unit = {
-    checkAllProxies()
-    YouDaiLiCrawler.start()
+//    checkAllProxies()
+    IP66Crawler.start()
     ssdb.close()
   }
 

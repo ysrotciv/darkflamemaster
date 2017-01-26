@@ -67,4 +67,6 @@ object Utils {
     true
   }
 
+  def result(message: String, successCount: Int, failureCount: Int): String = s"SUCCESS: $successCount, FAILURE: $failureCount, $message"
+
 }
