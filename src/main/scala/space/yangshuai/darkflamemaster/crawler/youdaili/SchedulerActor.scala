@@ -55,6 +55,7 @@ class SchedulerActor extends Actor {
         if (pageCount <= 0) scheduler ! result("complete")
       } else {
         val currentProxy = ProxyManager.getProxy
+        logger.info(s"Begin to crawl $url...")
         if (currentProxy equals proxy) {
           sender ! ProxyPageRequest(url, ProxyManager.updateProxy(), isHomePage)
         } else {
