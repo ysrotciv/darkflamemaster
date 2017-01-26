@@ -16,7 +16,7 @@ object IP66Crawler extends Crawler{
 
   val logger = Logger("66IP")
 
-  override def crawl(): Unit = {
+  override def start(): Unit = {
 
     val proxy = ProxyManager.getProxy
 

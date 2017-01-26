@@ -11,12 +11,12 @@ import space.yangshuai.darkflamemaster.db.ProxyManager
 /**
   * Created by rotciv on 2017/1/24.
   */
-object KuaidailiCrawler extends Crawler {
+object KuaiDaiLiCrawler extends Crawler {
 
   private val HOME_PAGE = "http://www.kuaidaili.com/free/inha/"
   private val logger = Logger("kuaidaili")
 
-  override def crawl(): Unit = {
+  override def start(): Unit = {
 
     val conf = ConfigFactory.load()
     val userAgent = conf.getString("user_agent")

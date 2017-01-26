@@ -4,7 +4,9 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.jsoup.Jsoup
 import org.nutz.ssdb4j.SSDBs
-import space.yangshuai.darkflamemaster.crawler.{IP66Crawler, KuaidailiCrawler}
+import space.yangshuai.darkflamemaster.common.Utils
+import space.yangshuai.darkflamemaster.crawler.youdaili.YouDaiLiCrawler
+import space.yangshuai.darkflamemaster.crawler.{IP66Crawler, KuaiDaiLiCrawler}
 import space.yangshuai.darkflamemaster.exception.DFMProxyExhaustedException
 
 /**
@@ -28,7 +30,6 @@ object ProxyManager {
 
   private val DEFAULT_SCORE = 0
   private val DEFAULT_TTL = 24 * 60 * 60
-  private val IP_REGEX = "((?:(?:25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(?:25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d))))"
 
   /**
     * Add a new proxy to "proxy_live"
@@ -49,6 +50,8 @@ object ProxyManager {
     * @return checking result
     */
   def checkProxy(proxy: String, ifNew: Boolean = true): Boolean = {
+    if (!Utils.validProxy(proxy)) return false
+
     if (ssdb.exists(proxy).asInt() > 0) {
       logger.info(s"$proxy already lose efficacy")
       return false
@@ -112,39 +115,23 @@ object ProxyManager {
     import scala.collection.JavaConversions._
     val list = ssdb.zscan(PROXY_LIVE, "", "", "", -1).datas
     list.toList.map(bytes => {
-      val arr = new String(bytes).split(":")
-      if (arr == null || arr.length != 2 || !validPort(arr(1)) || !validHost(arr(0)))
+      val proxy = new String(bytes)
+      val arr = proxy.split(":")
+      if (arr == null || arr.length != 2 || Utils.validProxy(proxy))
         null
       else
         (arr(0), arr(1).toInt)
     }).filter(_ != null)
   }
 
-  /**
-    * Check if the string represents a valid host.
-    * @param host host string
-    * @return
-    */
-  private def validHost(host: String): Boolean = host.matches(IP_REGEX)
-
-  /**
-    * Check if the string represents a valid port.
-    * @param port port string
-    * @return
-    */
-  private def validPort(port: String): Boolean = {
-    if (!port.matches("\\d+")) return false
-    if (port.toInt < 0 || port.toInt > 65535) return false
-    true
-  }
-
-  def updateProxy(): Unit = {
+  def updateProxy(): (String, Int) = {
     if (proxyQueue.isEmpty) {
       proxyQueue ++= getProxies
     }
     if (proxyQueue.isEmpty) throw DFMProxyExhaustedException()
     currentProxy = proxyQueue.dequeue()
     logger.info(s"change proxy to $currentProxy")
+    currentProxy
   }
 
   def getProxy: (String, Int) = {
@@ -161,7 +148,7 @@ object ProxyManager {
 
   def main(args: Array[String]): Unit = {
     checkAllProxies()
-    IP66Crawler.crawl()
+    YouDaiLiCrawler.start()
     ssdb.close()
   }
 
