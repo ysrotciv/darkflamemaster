@@ -8,5 +8,5 @@ Project name comes from an interesting Animation.
 ## Proxy sources:
 * http://www.kuaidaili.com/free/inha/
 * http://www.66ip.cn/index.html
-* http://www.youdaili.net/ (TODO)
+* http://www.youdaili.net/
 * http://www.goubanjia.com/free/index.shtml (TODO)
