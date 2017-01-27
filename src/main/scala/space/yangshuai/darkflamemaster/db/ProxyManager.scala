@@ -116,7 +116,7 @@ object ProxyManager {
     list.toList.map(bytes => {
       val proxy = new String(bytes)
       val arr = proxy.split(":")
-      if (arr == null || arr.length != 2 || Utils.validProxy(proxy))
+      if (arr == null || arr.length != 2 || !Utils.validProxy(proxy))
         null
       else
         (arr(0), arr(1).toInt)
