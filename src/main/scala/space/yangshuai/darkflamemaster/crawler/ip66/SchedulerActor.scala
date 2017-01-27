@@ -31,10 +31,12 @@ class SchedulerActor extends Actor {
         }
       }
     case PageActor.Success =>
+      context.stop(sender)
       pageCount -= 1
       successCount += 1
       if (pageCount <= 0) entry ! result("Completed", successCount, failureCount)
     case PageActor.Failed =>
+      context.stop(sender)
       pageCount -= 1
       failureCount += 1
       if (pageCount <= 0) entry ! result("Completed", successCount, failureCount)

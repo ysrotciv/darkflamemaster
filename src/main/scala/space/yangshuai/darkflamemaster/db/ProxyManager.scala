@@ -6,6 +6,7 @@ import org.jsoup.Jsoup
 import org.nutz.ssdb4j.SSDBs
 import space.yangshuai.darkflamemaster.common.Utils
 import space.yangshuai.darkflamemaster.crawler.ip66.IP66Crawler
+import space.yangshuai.darkflamemaster.crawler.youdaili.YouDaiLiCrawler
 import space.yangshuai.darkflamemaster.exception.DFMProxyExhaustedException
 
 /**
@@ -149,7 +150,8 @@ object ProxyManager {
   }
 
   def main(args: Array[String]): Unit = {
-//    checkAllProxies()
+    checkAllProxies()
+    YouDaiLiCrawler.start()
     IP66Crawler.start()
     ssdb.close()
   }

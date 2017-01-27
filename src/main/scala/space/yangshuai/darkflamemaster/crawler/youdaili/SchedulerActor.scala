@@ -39,6 +39,7 @@ class SchedulerActor extends Actor {
       }
     case HomePageActor.Failed =>
       scheduler ! result("Failed during crawling home page.", successCount, failureCount)
+      context.stop(sender)
     case ProxyPageActor.PageNumberMessage(firstPageURL, pageNumber) =>
       if (pageNumber < 2) scheduler ! result("Failed during crawling first page.", successCount, failureCount)
       pageCount = pageNumber - 1
@@ -49,6 +50,7 @@ class SchedulerActor extends Actor {
           actor ! ProxyPageRequest(url, ProxyManager.getProxy)
         }
       }
+      context.stop(sender)
     case ProxyPageActor.ConnectionError(url, proxy, isHomePage) =>
       if (proxy == null) {
         failureCount += 1
@@ -65,10 +67,12 @@ class SchedulerActor extends Actor {
       }
     case ProxyPageActor.Failed(url) =>
       logger.error(s"Failed during crawling $url.")
+      context.stop(sender)
       failureCount += 1
       pageCount -= 1
       if (pageCount <= 0) scheduler ! result("complete", successCount, failureCount)
     case ProxyPageActor.Success =>
+      context.stop(sender)
       successCount += 1
       pageCount -= 1
       if (pageCount <= 0) scheduler ! result("complete", successCount, failureCount)
