@@ -3,8 +3,8 @@ package space.yangshuai.darkflamemaster
 import com.typesafe.scalalogging.Logger
 import space.yangshuai.darkflamemaster.common.Utils
 import space.yangshuai.darkflamemaster.crawler.youdaili.YouDaiLiCrawler
-import space.yangshuai.darkflamemaster.crawler.KuaiDaiLiCrawler
 import space.yangshuai.darkflamemaster.crawler.ip66.IP66Crawler
+import space.yangshuai.darkflamemaster.crawler.kuaidaili.KuaiDaiLiCrawler
 import space.yangshuai.darkflamemaster.db.ProxyManager
 
 /**
