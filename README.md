@@ -9,4 +9,3 @@ Project name comes from an interesting Animation.
 * http://www.kuaidaili.com/free/inha/
 * http://www.66ip.cn/index.html
 * http://www.youdaili.net/
-* http://www.goubanjia.com/free/index.shtml (TODO)
