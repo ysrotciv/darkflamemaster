@@ -150,7 +150,7 @@ object ProxyManager {
   }
 
   def main(args: Array[String]): Unit = {
-    checkAllProxies()
+//    checkAllProxies()
     YouDaiLiCrawler.start()
     IP66Crawler.start()
     ssdb.close()

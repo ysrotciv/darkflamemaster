@@ -19,9 +19,15 @@ class ProxyPageActor extends Actor {
   import ProxyPageActor._
 
   private val logger = Logger[ProxyPageActor]
+  private var count = 0
 
   override def receive: Receive = {
     case ProxyPageRequest(url, proxy, homePage) =>
+      if (count >= 10) {
+        logger.error(s"Retry times run out: $url($count)")
+        sender ! Failed
+      }
+      count += 1
       logger.info(s"Begin to crawl $url...")
       try {
         val doc = Utils.commonRequest(url, proxy)

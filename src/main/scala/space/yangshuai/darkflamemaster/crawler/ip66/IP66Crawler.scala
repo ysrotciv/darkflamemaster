@@ -17,7 +17,7 @@ object IP66Crawler extends Crawler{
 
   override def start(): Unit = {
     logger.info("Begin to collect proxies on 66IP...")
-    val scheduler = system.actorOf(SchedulerActor.props, "Scheduler")
+    val scheduler = system.actorOf(SchedulerActor.props, "IP66_Scheduler")
     implicit val timeout = Timeout(60 minutes)
     val future = scheduler ? SchedulerActor.Start
     try {

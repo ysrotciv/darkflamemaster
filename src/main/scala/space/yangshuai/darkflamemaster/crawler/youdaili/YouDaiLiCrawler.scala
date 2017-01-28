@@ -14,12 +14,11 @@ import scala.concurrent.duration._
   */
 object YouDaiLiCrawler extends Crawler {
 
-  val system =  ActorSystem("YouDaiLi")
   system.eventStream.setLogLevel(LogLevel(3))
 
   override def start(): Unit = {
     logger.info("Begin to collect proxies on YouDaiLi...")
-    val actor = system.actorOf(SchedulerActor.props, "SchedulerActor")
+    val actor = system.actorOf(SchedulerActor.props, "YouDaiLi_Scheduler")
     implicit val timeout = Timeout(60 minutes)
     val future = actor ? SchedulerActor.Start
     try {

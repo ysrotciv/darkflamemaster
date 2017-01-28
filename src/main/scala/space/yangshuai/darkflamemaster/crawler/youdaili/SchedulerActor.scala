@@ -19,11 +19,11 @@ class SchedulerActor extends Actor {
   override def receive: Receive = {
     case Start =>
       scheduler = sender
-      val actor = YouDaiLiCrawler.system.actorOf(HomePageActor.props, "home_page_actor")
+      val actor = system.actorOf(HomePageActor.props, "home_page_actor")
       logger.info("Begin to crawl home page...")
       actor ! HomePageRequest(HOME_PAGE, ProxyManager.getProxy)
     case URLMessage(url) =>
-      val actor = YouDaiLiCrawler.system.actorOf(ProxyPageActor.props, "first_page_actor")
+      val actor = system.actorOf(ProxyPageActor.props, "first_page_actor")
       logger.info("Begin to crawl first page...")
       actor ! ProxyPageRequest(url, ProxyManager.getProxy, homePage = true)
     case HomePageActor.ConnectionError(url, proxy) =>
@@ -46,7 +46,7 @@ class SchedulerActor extends Actor {
       if (pageNumber >= 2) {
         for (i <- 2 to pageNumber) {
           val url = s"${firstPageURL.split(".html")(0)}_$i.html"
-          val actor = YouDaiLiCrawler.system.actorOf(ProxyPageActor.props, url.split("\\/").last)
+          val actor = system.actorOf(ProxyPageActor.props, url.split("\\/").last)
           actor ! ProxyPageRequest(url, ProxyManager.getProxy)
         }
       }

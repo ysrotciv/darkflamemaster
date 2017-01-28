@@ -1,10 +1,10 @@
 package space.yangshuai.darkflamemaster.crawler.ip66
 
-import java.net.SocketTimeoutException
+import java.net.{SocketException, SocketTimeoutException}
 
 import akka.actor.{Actor, Props}
-import akka.actor.Actor.Receive
 import org.jsoup.HttpStatusException
+import org.jsoup.nodes.Document
 import space.yangshuai.darkflamemaster.common.Utils
 import space.yangshuai.darkflamemaster.db.ProxyManager
 
@@ -14,12 +14,20 @@ import space.yangshuai.darkflamemaster.db.ProxyManager
 class PageActor extends Actor {
   import PageActor._
 
+  private var count = 0
+
   override def receive: Receive = {
     case SchedulerActor.RequestMessage(url, proxy) =>
+      if (count >= 10) {
+        logger.error(s"Retry times run out: $url($count)")
+        sender ! Failed
+      }
+      count += 1
       logger.info(s"Begin to crawl $url with $proxy")
+      var doc: Document = null
       try {
-        val trs = Utils.commonRequest(url, proxy)
-          .getElementById("footer")
+        doc = Utils.commonRequest(url, proxy)
+        val trs = doc.getElementById("footer")
           .getElementsByTag("tbody").first
           .getElementsByTag("tr")
         for ( i <- 1 until trs.size()) {
@@ -30,12 +38,14 @@ class PageActor extends Actor {
         }
         sender ! Success
       } catch {
-        case e: HttpStatusException =>
+        case _: HttpStatusException =>
           sender ! ConnectionError(url, proxy)
-          logger.error(url, e)
-        case e: SocketTimeoutException =>
+        case _: SocketTimeoutException =>
           sender ! ConnectionError(url, proxy)
-          logger.error(url, e)
+        case _: SocketException =>
+          sender ! ConnectionError(url, proxy)
+        case _: NullPointerException =>
+          sender ! ConnectionError(url, proxy)
         case e: Throwable =>
           sender ! Failed
           logger.error(url, e)

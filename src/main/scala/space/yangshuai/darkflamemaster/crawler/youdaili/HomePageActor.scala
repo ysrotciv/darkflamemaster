@@ -5,6 +5,7 @@ import java.net.SocketTimeoutException
 import akka.actor.{Actor, Props}
 import com.typesafe.scalalogging.Logger
 import org.jsoup.HttpStatusException
+import org.jsoup.nodes.Document
 import space.yangshuai.darkflamemaster.common.Utils
 import space.yangshuai.darkflamemaster.crawler.youdaili.SchedulerActor.HomePageRequest
 
@@ -19,9 +20,10 @@ class HomePageActor extends Actor {
 
   override def receive: Receive = {
     case HomePageRequest(url, proxy) =>
+      var doc: Document = null
       try {
-        val firstPage = Utils.commonRequest(url, proxy)
-          .getElementsByClass("chunlist").first()
+        doc = Utils.commonRequest(url, proxy)
+        val firstPage = doc.getElementsByClass("chunlist").first()
           .getElementsByTag("a").first().attr("href")
         sender ! SchedulerActor.URLMessage(firstPage)
       } catch {
@@ -32,7 +34,8 @@ class HomePageActor extends Actor {
           logger.error(url, e)
           sender ! ConnectionError(url, proxy)
         case e: Exception =>
-          logger.error(url, e)
+          logger.error(url)
+          logger.error(doc.toString, e)
           sender() ! Failed
       }
 
