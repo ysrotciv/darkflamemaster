@@ -13,6 +13,8 @@ import scala.concurrent.duration._
   */
 object IP66Crawler extends Crawler{
 
+  val logger = Logger("66IP")
+
   override def start(): Unit = {
     logger.info("Begin to collect proxies on 66IP...")
     val scheduler = system.actorOf(SchedulerActor.props, "IP66_Scheduler")
@@ -24,8 +26,6 @@ object IP66Crawler extends Crawler{
     } catch {
       case e: Exception =>
         logger.error("", e)
-    } finally {
-      system.terminate()
     }
   }
 

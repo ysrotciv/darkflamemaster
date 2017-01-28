@@ -27,8 +27,6 @@ object YouDaiLiCrawler extends Crawler {
     } catch {
       case e: Exception =>
         logger.error("", e)
-    } finally {
-      system.terminate()
     }
   }
 
