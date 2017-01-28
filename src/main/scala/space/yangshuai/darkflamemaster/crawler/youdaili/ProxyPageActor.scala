@@ -38,15 +38,12 @@ class ProxyPageActor extends Actor {
         extractProxies(doc.getElementsByClass("content").first.getElementsByTag("p"))
         sender ! Success
       } catch {
-        case e: HttpStatusException =>
-          logger.error(url, e)
+        case _: HttpStatusException =>
           sender ! ConnectionError(url, proxy, homePage)
-        case e: SocketTimeoutException =>
-          logger.error(url, e)
+        case _: SocketTimeoutException =>
           sender ! ConnectionError(url, proxy, homePage)
-        case e: NullPointerException =>
-          logger.error(s"DOM maybe changed on $url", e)
-          sender ! Failed
+        case _: NullPointerException =>
+          sender ! ConnectionError(url, proxy, homePage)
         case e: Exception =>
           logger.error(url, e)
           sender ! Failed
