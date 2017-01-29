@@ -124,6 +124,7 @@ object ProxyManager {
   }
 
   def updateProxy(proxy: (String, Int) = null): (String, Int) = {
+    if (proxy == null && currentProxy != null) return currentProxy
     if (proxyQueue.isEmpty) {
       proxyQueue ++= getProxies
     }
