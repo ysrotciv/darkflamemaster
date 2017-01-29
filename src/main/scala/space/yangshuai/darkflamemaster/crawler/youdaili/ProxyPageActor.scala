@@ -26,27 +26,28 @@ class ProxyPageActor extends Actor {
       if (count >= 10) {
         logger.error(s"Retry times run out: $url($count)")
         sender ! Failed
-      }
-      count += 1
-      logger.info(s"Begin to crawl $url...")
-      try {
-        val doc = Utils.commonRequest(url, proxy)
-        if (homePage) {
-          val pageNumber = extractPageNumber(doc)
-          sender ! PageNumberMessage(url, pageNumber)
+      } else {
+        count += 1
+        logger.info(s"Begin to crawl $url...")
+        try {
+          val doc = Utils.commonRequest(url, proxy)
+          if (homePage) {
+            val pageNumber = extractPageNumber(doc)
+            sender ! PageNumberMessage(url, pageNumber)
+          }
+          extractProxies(doc.getElementsByClass("content").first.getElementsByTag("p"))
+          sender ! Success
+        } catch {
+          case _: HttpStatusException =>
+            sender ! ConnectionError(url, proxy, homePage)
+          case _: SocketTimeoutException =>
+            sender ! ConnectionError(url, proxy, homePage)
+          case _: NullPointerException =>
+            sender ! ConnectionError(url, proxy, homePage)
+          case e: Exception =>
+            logger.error(url, e)
+            sender ! Failed
         }
-        extractProxies(doc.getElementsByClass("content").first.getElementsByTag("p"))
-        sender ! Success
-      } catch {
-        case _: HttpStatusException =>
-          sender ! ConnectionError(url, proxy, homePage)
-        case _: SocketTimeoutException =>
-          sender ! ConnectionError(url, proxy, homePage)
-        case _: NullPointerException =>
-          sender ! ConnectionError(url, proxy, homePage)
-        case e: Exception =>
-          logger.error(url, e)
-          sender ! Failed
       }
   }
 

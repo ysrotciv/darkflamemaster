@@ -21,34 +21,35 @@ class PageActor extends Actor {
       if (count >= 10) {
         logger.error(s"Retry times run out: $url($count)")
         sender ! Failed
-      }
-      count += 1
-      logger.info(s"Begin to crawl $url with $proxy")
-      var doc: Document = null
-      try {
-        doc = Utils.commonRequest(url, proxy)
-        val trs = doc.getElementById("footer")
-          .getElementsByTag("tbody").first
-          .getElementsByTag("tr")
-        for ( i <- 1 until trs.size()) {
-          val tds = trs.get(i).getElementsByTag("td")
-          val host = tds.get(0).text
-          val port = tds.get(1).text
-          ProxyManager.addNewProxy(s"$host:$port")
+      } else {
+        count += 1
+        logger.info(s"Begin to crawl $url with $proxy")
+        var doc: Document = null
+        try {
+          doc = Utils.commonRequest(url, proxy)
+          val trs = doc.getElementById("footer")
+            .getElementsByTag("tbody").first
+            .getElementsByTag("tr")
+          for ( i <- 1 until trs.size()) {
+            val tds = trs.get(i).getElementsByTag("td")
+            val host = tds.get(0).text
+            val port = tds.get(1).text
+            ProxyManager.addNewProxy(s"$host:$port")
+          }
+          sender ! Success
+        } catch {
+          case _: HttpStatusException =>
+            sender ! ConnectionError(url, proxy)
+          case _: SocketTimeoutException =>
+            sender ! ConnectionError(url, proxy)
+          case _: SocketException =>
+            sender ! ConnectionError(url, proxy)
+          case _: NullPointerException =>
+            sender ! ConnectionError(url, proxy)
+          case e: Throwable =>
+            sender ! Failed
+            logger.error(url, e)
         }
-        sender ! Success
-      } catch {
-        case _: HttpStatusException =>
-          sender ! ConnectionError(url, proxy)
-        case _: SocketTimeoutException =>
-          sender ! ConnectionError(url, proxy)
-        case _: SocketException =>
-          sender ! ConnectionError(url, proxy)
-        case _: NullPointerException =>
-          sender ! ConnectionError(url, proxy)
-        case e: Throwable =>
-          sender ! Failed
-          logger.error(url, e)
       }
   }
 }

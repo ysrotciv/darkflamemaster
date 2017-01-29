@@ -18,33 +18,36 @@ class PageActor extends Actor {
 
   override def receive: Receive = {
     case Messages.RequestMessage(url, proxy) =>
-      if (count >= 1) sender ! Messages.Failed
-      count += 1
-      try {
-        val doc = Utils.commonRequest(url, proxy, cookie)
-        val trs = doc.getElementById("list")
-          .getElementsByTag("tbody").first
-          .getElementsByTag("tr")
-        for ( i <- 0 until trs.size()) {
-          val tds = trs.get(i).getElementsByTag("td")
-          val host = tds.get(0).text
-          val port = tds.get(1).text
-          ProxyManager.addNewProxy(s"$host:$port")
+      if (count >= 1) {
+        sender ! Messages.Failed
+      } else {
+        count += 1
+        try {
+          val doc = Utils.commonRequest(url, proxy, cookie)
+          val trs = doc.getElementById("list")
+            .getElementsByTag("tbody").first
+            .getElementsByTag("tr")
+          for ( i <- 0 until trs.size()) {
+            val tds = trs.get(i).getElementsByTag("td")
+            val host = tds.get(0).text
+            val port = tds.get(1).text
+            ProxyManager.addNewProxy(s"$host:$port")
+          }
+          sender ! Messages.Start
+        } catch {
+          case e: HttpStatusException =>
+            sender ! Messages.ConnectionError(url, proxy)
+            logger.error("", e)
+          case _: SocketTimeoutException =>
+            sender ! Messages.ConnectionError(url, proxy)
+          case _: SocketException =>
+            sender ! Messages.ConnectionError(url, proxy)
+          case _: NullPointerException =>
+            sender ! Messages.ConnectionError(url, proxy)
+          case e: Throwable =>
+            sender ! Messages.Failed
+            logger.error(url, e)
         }
-        sender ! Messages.Start
-      } catch {
-        case e: HttpStatusException =>
-          sender ! Messages.ConnectionError(url, proxy)
-          logger.error("", e)
-        case _: SocketTimeoutException =>
-          sender ! Messages.ConnectionError(url, proxy)
-        case _: SocketException =>
-          sender ! Messages.ConnectionError(url, proxy)
-        case _: NullPointerException =>
-          sender ! Messages.ConnectionError(url, proxy)
-        case e: Throwable =>
-          sender ! Messages.Failed
-          logger.error(url, e)
       }
   }
 
